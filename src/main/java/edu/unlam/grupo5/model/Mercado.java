@@ -2,7 +2,7 @@ package edu.unlam.grupo5.model;
 
 public class Mercado {
 
-    private final String simbolo;
+    private String simbolo;
     private Double capacidad;
     private String volumen24hs;
     private String variacionUltimos7dias;
@@ -14,13 +14,35 @@ public class Mercado {
         this.variacionUltimos7dias = variacionUltimos7dias;
     }
 
-    @Override
-    public String toString() {
-        return "\nMercado\n{" +
-                "simbolo='" + simbolo + '\'' +
-                ", capacidad=" + capacidad +
-                ", volumen24hs=" + volumen24hs +
-                ", variacionUltimos7dias=" + variacionUltimos7dias +
-                "}";
+    public String getSimbolo() {
+        return simbolo;
+    }
+
+    public void setSimbolo(String simbolo) {
+        this.simbolo = simbolo;
+    }
+
+    public Double getCapacidad() {
+        return capacidad;
+    }
+
+    public void setCapacidad(Double capacidad) {
+        this.capacidad = capacidad;
+    }
+
+    public String getVolumen24hs() {
+        return volumen24hs;
+    }
+
+    public void setVolumen24hs(String volumen24hs) {
+        this.volumen24hs = volumen24hs;
+    }
+
+    public String getVariacionUltimos7dias() {
+        return variacionUltimos7dias;
+    }
+
+    public void setVariacionUltimos7dias(String variacionUltimos7dias) {
+        this.variacionUltimos7dias = variacionUltimos7dias;
     }
 }
