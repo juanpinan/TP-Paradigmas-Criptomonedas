@@ -2,8 +2,8 @@ package edu.unlam.grupo5.model;
 
 public class Criptomoneda {
 
-    private final String nombre;
-    private final String simbolo;
+    private String nombre;
+    private String simbolo;
     private Double precioUSD;
 
     public Criptomoneda(String nombre, String simbolo, Double precioUSD) {
@@ -12,12 +12,27 @@ public class Criptomoneda {
         this.precioUSD = precioUSD;
     }
 
-    @Override
-    public String toString() {
-        return "\nCriptomoneda\n{" +
-                "nombre='" + nombre + '\'' +
-                ", simbolo='" + simbolo + '\'' +
-                ", precioUSD=" + precioUSD +
-                "\n}";
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getSimbolo() {
+        return simbolo;
+    }
+
+    public Double getPrecioUSD() {
+        return precioUSD;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setSimbolo(String simbolo) {
+        this.simbolo = simbolo;
+    }
+
+    public void setPrecioUSD(Double precioUSD) {
+        this.precioUSD = precioUSD;
     }
 }
