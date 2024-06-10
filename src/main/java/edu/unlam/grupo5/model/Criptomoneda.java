@@ -35,4 +35,9 @@ public class Criptomoneda {
     public void setPrecioUSD(Double precioUSD) {
         this.precioUSD = precioUSD;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Nombre: %s, Simbolo: %s, Precio en dolares: %f", this.nombre, this.simbolo, this.precioUSD);
+    }
 }

@@ -45,4 +45,10 @@ public class Mercado {
     public void setVariacionUltimos7dias(String variacionUltimos7dias) {
         this.variacionUltimos7dias = variacionUltimos7dias;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Simbolo: %s, Capacidad: %f, Volumen Ultimas 24hs: %s, Variacion ultimos 7 dias: %s",
+                this.simbolo, this.capacidad, this.volumen24hs, this.variacionUltimos7dias);
+    }
 }

@@ -8,7 +8,7 @@ public class Util {
 
     public static String ingresoDeTexto() {
         String s = scanner.nextLine();
-        boolean validez = s.matches("[a-zA-Z0-9]+");
+        boolean validez = s.matches("^[a-zA-Z0-9.]+$"); // Permitir espacios?
         if (validez){
             return s;
         } else {
@@ -28,5 +28,18 @@ public class Util {
             ingresoDeTexto();
         }
         return s;
+    }
+
+    public static void mostrarMenuAdministrador() {
+        System.out.println("Menu de opciones");
+        System.out.println("-----------------\n");
+        System.out.println("1) Crear Criptomoneda");
+        System.out.println("2) Modificar Criptomoneda");
+        System.out.println("3) Eliminar Criptomoneda");
+        System.out.println("4) Consultar Criptomoneda");
+        System.out.println("5) Consultar estado actual del mercado");
+        System.out.println("6) Salir y guardar");
+        System.out.println();
+        System.out.println("Ingrese una opcion (1-6): ");
     }
 }

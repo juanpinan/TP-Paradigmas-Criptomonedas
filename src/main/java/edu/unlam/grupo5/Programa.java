@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 import static edu.unlam.grupo5.Util.ingresoDeOpcionNumerica;
 import static edu.unlam.grupo5.Util.ingresoDeTexto;
+import static edu.unlam.grupo5.Util.mostrarMenuAdministrador;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarCriptomonedas;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarMercados;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarUsuarios;
@@ -26,7 +27,7 @@ public class Programa {
     }
 
     public void iniciar() {
-        Usuario usuario = login();
+        Usuario usuario = login(); // TODO Se podria armar dos clases SistemaAdministrador y SistemaTrader y se ejecuta uno de los dos dependiendo de este metodo
         System.out.println("Bienvenido %s al sistema de criptodivisias. Usted está identificado como %s");
         mostrarMenuAdministrador();
         String opcion = ingresoDeOpcionNumerica();
@@ -39,12 +40,56 @@ public class Programa {
                 case "2":
                     System.out.println("Usted selecciono modificar criptomoneda.");
                     System.out.println("Ingrese la moneda que quiere modificar: ");
-                    String monedaAModificar = ingresoDeTexto();
-                    modificarCriptomoneda(monedaAModificar);
+                    String criptoAModificar = ingresoDeTexto();
+                    modificarCriptomoneda(criptoAModificar);
                     break;
+                case "3":
+                    System.out.println("Usted selecciono eliminar criptomoneda.");
+                    mostrarCriptomonedas();
+                    // TODO: Hacer un check por si no hay criptomonedas en el sistema.
+                    System.out.println("Ingrese el nombre de la moneda que quiere eliminar: ");
+                    String criptoAEliminar = ingresoDeTexto();
+                    while(!eliminarCriptomoneda(criptoAEliminar)) {
+                        System.out.printf("La criptomoneda %s no existe. Ingrese el nombre nuevamente: %n", criptoAEliminar);
+                        criptoAEliminar = ingresoDeTexto();
+                    }
+                    break;
+                case "4":
+                    System.out.println("Usted selecciono consultar criptomoneda.");
+                    System.out.println("Ingrese el nombre de la moneda que quiere consultar:");
+                    String criptoAConsultar = ingresoDeTexto();
+                    Criptomoneda criptomoneda = buscarCriptomoneda(criptoAConsultar);
+                    while(criptomoneda == null) {
+                        System.out.printf("La criptomoneda %s no existe. Ingrese el nombre nuevamente: %n", criptoAConsultar);
+                        criptoAConsultar = ingresoDeTexto();
+                        criptomoneda = buscarCriptomoneda(criptoAConsultar);
+                    }
+                    Mercado mercado = buscarMercado(criptomoneda.getSimbolo());
+                    System.out.println(criptomoneda);
+                    System.out.println("Datos del mercado:");
+                    System.out.println(mercado.toString());
+                    // TODO: Estaria bueno agregar opcion para preguntar si quiere consultar alguna otra
+                case "5":
+                    System.out.println("Usted selecciono consultar el estado actual del mercado.");
+                    mostrarMercado();
             }
             mostrarMenuAdministrador();
             opcion = ingresoDeOpcionNumerica();
+        }
+    }
+
+    private void mostrarMercado() {
+        System.out.println();
+        System.out.println("Estado de los mercados");
+        System.out.println("-----------------");
+        for (Mercado mercado : mercados) {
+            System.out.println(mercado.toString());
+        }
+    }
+
+    private void mostrarCriptomonedas() {
+        for (Criptomoneda cripto : criptomonedas) {
+            System.out.println(cripto.toString());
         }
     }
 
@@ -132,21 +177,8 @@ public class Programa {
     }
 
     private void agregarMercado(Criptomoneda criptomoneda) {
-        Mercado mercado = new Mercado(criptomoneda.getSimbolo(), 500D, "1%", "1%");
+        Mercado mercado = new Mercado(criptomoneda.getSimbolo(), 500D, "1%", "+1%");
         this.mercados.add(mercado);
-    }
-
-    private static void mostrarMenuAdministrador() {
-        System.out.println("Menu de opciones");
-        System.out.println("-----------------\n");
-        System.out.println("1) Crear Criptomoneda");
-        System.out.println("2) Modificar Criptomoneda");
-        System.out.println("3) Eliminar Criptomoneda");
-        System.out.println("4) Consultar Criptomoneda");
-        System.out.println("5) Consultar estado actual del mercado");
-        System.out.println("6) Salir");
-        System.out.println();
-        System.out.println("Ingrese una opcion (1-6): ");
     }
     
     public Usuario login() {
@@ -182,7 +214,6 @@ public class Programa {
         }
         return null;
     }
-
     private Mercado buscarMercado(String simbolo) {
         for (Mercado mercado : this.mercados) {
             if (mercado.getSimbolo().equals(simbolo)) {
@@ -190,5 +221,26 @@ public class Programa {
             }
         }
         return null;
+    }
+
+
+    private boolean eliminarCriptomoneda(String nombre) {
+        for (Criptomoneda criptomoneda : this.criptomonedas) {
+            if (criptomoneda.getNombre().equals(nombre)) {
+                this.criptomonedas.remove(criptomoneda);
+                eliminarMercado(criptomoneda.getSimbolo());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void eliminarMercado(String simbolo) {
+        for (Mercado mercado : this.mercados) {
+            if (mercado.getSimbolo().equals(simbolo)) {
+                this.mercados.remove(mercado);
+                return;
+            }
+        }
     }
 }
