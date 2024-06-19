@@ -1,5 +1,4 @@
 package edu.unlam.grupo5.model;
-import java.math.BigDecimal;
 
 public class Usuario {
 
@@ -7,11 +6,7 @@ public class Usuario {
     private final String rolONumeroDeCuenta;
     private final String banco;
 
-
-    private Double saldo; // TODO: Ver de cambiar a BigDecimal
-    private BigDecimal saldoB; // sumo este dato, yo diría de ir haciendo las cosas con double que sabemos cómo funciona
-    //y despues rompernos la cabeza para hacerlo funcionar con BigDecimal, que tiene sus propios métodos.
-    
+    private Double saldo;
 
     public Usuario(String nombreDeUsuario, String rolONumeroDeCuenta, String banco, Double saldo) {
         this.nombreDeUsuario = nombreDeUsuario;
@@ -36,5 +31,11 @@ public class Usuario {
         return nombreDeUsuario;
     }
 
+    public void actualizarSaldoPorCompra(double dineroGastado) {
+        this.saldo = this.saldo - dineroGastado;
+    }
 
+    public void actualizarSaldoPorVenta(double dineroGanado) {
+        this.saldo = this.saldo + dineroGanado;
+    }
 }
