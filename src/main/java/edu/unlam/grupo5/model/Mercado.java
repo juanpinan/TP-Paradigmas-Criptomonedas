@@ -14,6 +14,56 @@ public class Mercado {
         this.variacionUltimos7dias = variacionUltimos7dias;
     }
 
+    public void ejecutarCompra(Criptomoneda criptomoneda, Double cantidad) {
+        actualizarCapacidadPorCompra(cantidad);
+        actualizarVolumen(1.05);
+        actualizarVariacion(1.05);
+        // TODO: Mover esto fuera de esta clase
+        if (cantidad > 1000){
+            criptomoneda.actualizarPrecioPorCompraGrande();
+        }
+    }
+
+    public void ejecutarVenta(Double cantidad) {
+        actualizarCapacidadPorVenta(cantidad);
+        actualizarVolumen(0.97);
+        actualizarVariacion(0.97);
+    }
+
+    private void actualizarCapacidadPorVenta(Double cantidad) {
+        this.capacidad += cantidad;
+    }
+
+    private void actualizarCapacidadPorCompra(Double cantidad) {
+        if(cantidad > this.capacidad) {
+            throw new RuntimeException("La compra excede la capacidad disponible de la moneda.");
+        }
+        this.capacidad -= cantidad;
+    }
+
+    private void actualizarVolumen(double porcentaje) {
+        double volumen = Double.parseDouble(this.volumen24hs.substring(0, this.volumen24hs.length()-1));
+        this.volumen24hs = String.valueOf(volumen * porcentaje).substring(0,5) + "%";
+    }
+
+    private void actualizarVariacion(double porcentaje) {
+        double variacion = Double.parseDouble(this.variacionUltimos7dias.substring(1, this.variacionUltimos7dias.length()-1));
+        double valorAntesDeGuardar = variacion * porcentaje;
+        String variacionActualizada =
+                valorAntesDeGuardar > 10 ?
+                        String.valueOf(valorAntesDeGuardar).substring(0,5) :
+                        String.valueOf(valorAntesDeGuardar).substring(0,4);
+        this.variacionUltimos7dias = "+" + variacionActualizada + "%";
+    }
+
+    public String getVolumen24hs() {
+        return volumen24hs;
+    }
+
+    public String getVariacionUltimos7dias() {
+        return variacionUltimos7dias;
+    }
+
     public String getSimbolo() {
         return simbolo;
     }
@@ -24,26 +74,6 @@ public class Mercado {
 
     public Double getCapacidad() {
         return capacidad;
-    }
-
-    public void setCapacidad(Double capacidad) {
-        this.capacidad = capacidad;
-    }
-
-    public String getVolumen24hs() {
-        return volumen24hs;
-    }
-
-    public void setVolumen24hs(String volumen24hs) {
-        this.volumen24hs = volumen24hs;
-    }
-
-    public String getVariacionUltimos7dias() {
-        return variacionUltimos7dias;
-    }
-
-    public void setVariacionUltimos7dias(String variacionUltimos7dias) {
-        this.variacionUltimos7dias = variacionUltimos7dias;
     }
 
     @Override

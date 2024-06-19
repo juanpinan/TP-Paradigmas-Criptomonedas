@@ -1,34 +1,217 @@
 package edu.unlam.grupo5;
 
 import edu.unlam.grupo5.model.Criptomoneda;
+import edu.unlam.grupo5.model.Historico;
 import edu.unlam.grupo5.model.Mercado;
 import edu.unlam.grupo5.model.Usuario;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 import static edu.unlam.grupo5.Util.ingresoDeOpcionNumerica;
 import static edu.unlam.grupo5.Util.ingresoDeTexto;
 import static edu.unlam.grupo5.Util.mostrarMenuAdministrador;
+import static edu.unlam.grupo5.Util.mostrarMenuTrader;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarCriptomonedas;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarMercados;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarUsuarios;
 
 public class Programa {
 
-    private List<Criptomoneda> criptomonedas;
-    private List<Mercado> mercados;
-    private List<Usuario> usuarios;
+    // TODO: Cambiar criptomonedas a Set
+    private final List<Criptomoneda> criptomonedas;
+    private final List<Mercado> mercados;
+    private final List<Usuario> usuarios;
+    private final Map<Usuario, Historico> historicos;
 
     public Programa() {
         this.criptomonedas = cargarCriptomonedas();
         this.mercados = cargarMercados();
         this.usuarios = cargarUsuarios();
+        this.historicos = new HashMap<>(); // TODO Hacer la carga del historico si ya existe
     }
 
     public void iniciar() {
         Usuario usuario = login(); // TODO Se podria armar dos clases SistemaAdministrador y SistemaTrader y se ejecuta uno de los dos dependiendo de este metodo
-        System.out.println("Bienvenido %s al sistema de criptodivisias. Usted está identificado como %s");
+        if (usuario.getRolONumeroDeCuenta().equals("administrador")){
+            this.sistemaAdmin();
+        } else {
+            this.sistemaTrader(usuario);
+        }
+    }
+
+    private void sistemaTrader(Usuario usuario) {
+        System.out.printf("Bienvenido al sistema de criptodivisas. Usted está identificado como %s.%n", usuario.getNombreDeUsuario());
+        mostrarMenuTrader();
+        String opcion = ingresoDeOpcionNumerica();
+        while(!opcion.equals("7")){
+            switch (opcion) {
+                case "1":
+                    System.out.println("Usted selecciono comprar criptomonedas.");
+                    comprarCriptomoneda(usuario);
+                    break;
+                case "2":
+                    System.out.println("Usted selecciono vender criptomonedas.");
+                    venderCriptomoneda(usuario);
+                    break;
+                case "3":
+                    System.out.println("Usted selecciono consultar criptomonedas.");
+                    menuConsultaCriptomonedas();
+                    break;
+                case "4":
+                    System.out.println("Usted selecciono ver recomendaciones de criptomonedas.");
+                    mostrarCriptomonedaRecomendada();
+                    break;
+                case "5":
+                    System.out.println("Usted selecciono consultar el estado actual del mercado.");
+                    mostrarMercado();
+                    break;
+                case "6":
+                    System.out.println("Usted selecciono visualizar su archivo de transacciones historico.");
+                    mostrarHistoricoDelUsuario(usuario);
+                    break;
+            }
+            mostrarMenuTrader();
+            opcion = ingresoDeOpcionNumerica();
+        }
+    }
+
+    private void mostrarHistoricoDelUsuario(Usuario usuario) {
+        Historico historico = historicos.get(usuario);
+        if (historico == null) {
+            System.out.println("Este usuario no posee un historico de transacciones.");
+        } else {
+            for (Map.Entry<String, Double> entry : historico.getHistorialDeCompras().entrySet()) {
+                String cripto = entry.getKey();
+                Double valor = entry.getValue();
+                //TODO: Falta en orden descendente de cantidad.
+                System.out.printf("Criptomoneda: %s, Cantidad: %f%n", cripto, valor);
+            }
+        }
+    }
+
+    private void mostrarCriptomonedaRecomendada() {
+        double mayor = 0;
+        Criptomoneda criptomonedaARecomendar = null;
+        for (Criptomoneda criptomoneda : criptomonedas) {
+            double cantidadDisponible = buscarMercado(criptomoneda.getSimbolo()).getCapacidad();
+            double precio = criptomoneda.getPrecioUSD();
+            double estadistica = ( cantidadDisponible / precio ) * 100;
+            if(estadistica > mayor){
+                mayor = estadistica;
+                criptomonedaARecomendar = criptomoneda;
+            }
+        }
+        System.out.println("La criptomoneda recomendada en este momento es:");
+        System.out.println(criptomonedaARecomendar.toString());
+    }
+
+    private void venderCriptomoneda(Usuario usuario) {
+        List<String> listaDeCriptosDisponibles = mostrarCriptomonedasPoseidasPorUsuario(usuario);
+        if(listaDeCriptosDisponibles.isEmpty()) {
+            return;
+        }
+        System.out.println("Elija el simbolo de la criptomoneda que desea vender: ");
+        Criptomoneda criptomoneda = buscarCriptomonedaPorSimbolo(ingresoDeTexto());
+        while(criptomoneda == null || !listaDeCriptosDisponibles.contains(criptomoneda.getSimbolo())){
+            System.out.println("La criptomoneda que desea comprar no existe. Elija un nombre valido:");
+            criptomoneda = buscarCriptomonedaPorSimbolo(ingresoDeTexto());
+        }
+        System.out.println("Elija la cantidad a vender");
+        double cantAVender = Double.parseDouble(ingresoDeTexto());
+        if(cantAVender > historicos.get(usuario).getCantidadPorSimbolo(criptomoneda.getSimbolo())){
+            System.out.println("La cantidad que usted quiere comprar supera la que usted posee. Volviendo al menu principal.");
+            return;
+        }
+        System.out.printf("Usted eligio vender %s, cantidad: %s . ¿Quiere confirmar la operacion?%n",
+                criptomoneda.getSimbolo(),
+                cantAVender);
+        System.out.println("1) Si.");
+        System.out.println("2) No. Volver al menu principal.");
+        String opcion = ingresoDeOpcionNumerica();
+        while(!opcion.equals("2")) {
+            if (opcion.equals("1")) {
+                ejecutarVenta(usuario, criptomoneda, cantAVender);
+
+
+                return;
+            } else {
+                System.out.println("Opcion no valida. Ingrese de nuevo una opcion: ");
+                opcion = ingresoDeOpcionNumerica();
+            }
+        }
+
+    }
+
+    private void ejecutarVenta(Usuario usuario, Criptomoneda criptomoneda, double cantAVender) {
+        Mercado mercado = buscarMercado(criptomoneda.getSimbolo());
+        mercado.ejecutarVenta(cantAVender);
+        Historico historico = historicos.get(usuario);
+        historico.agregarVenta(criptomoneda.getSimbolo(), cantAVender);
+        double dineroGanado = cantAVender * criptomoneda.getPrecioUSD();
+        usuario.actualizarSaldoPorVenta(dineroGanado);
+        System.out.println("Operacion de venta exitosa. Volviendo al menu.");
+    }
+
+
+
+    private void comprarCriptomoneda(Usuario usuario) {
+        mostrarCriptomonedas();
+        System.out.println("Elija el simbolo de la criptomoneda que desea comprar: ");
+        Criptomoneda criptomoneda = buscarCriptomonedaPorSimbolo(ingresoDeTexto());
+        while(criptomoneda == null){
+            System.out.println("La criptomoneda que desea comprar no existe. Elija un nombre valido:");
+            criptomoneda = buscarCriptomonedaPorSimbolo(ingresoDeTexto());
+        }
+        System.out.println("Elija la cantidad a comprar: ");
+        Double cantidadAComprar = Double.parseDouble(ingresoDeTexto());
+        double precioOrden = cantidadAComprar * criptomoneda.getPrecioUSD();
+        System.out.printf("Usted eligio comprar %s con una cantidad de %.2f. Esto equivale a U$D %.2f. Quiere confirmar la operacion?%n",
+                criptomoneda.getSimbolo(),
+                cantidadAComprar,
+                precioOrden);
+        System.out.println("1) Si.");
+        System.out.println("2) No. Volver al menu principal.");
+        String opcion = ingresoDeOpcionNumerica();
+        while(!opcion.equals("2")) {
+            if (opcion.equals("1")) {
+                if(usuario.getSaldo() < precioOrden){
+                    System.out.println("Usted no posee el saldo suficiente para realizar esta compra. Operacion cancelada.");
+                } else {
+                    ejecutarCompra(usuario, criptomoneda, cantidadAComprar);
+                }
+                return;
+            } else {
+                System.out.println("Opcion no valida. Ingrese de nuevo una opcion: ");
+                opcion = ingresoDeOpcionNumerica();
+            }
+        }
+    }
+
+    private void ejecutarCompra(Usuario usuario, Criptomoneda criptomoneda, Double cantidadAComprar) {
+        Mercado mercado = buscarMercado(criptomoneda.getSimbolo());
+        double precioFinal = criptomoneda.getPrecioUSD() * cantidadAComprar;
+        mercado.ejecutarCompra(criptomoneda, cantidadAComprar);
+        usuario.actualizarSaldoPorCompra(precioFinal);
+
+        Historico historicoUsuario;
+        if (!historicos.containsKey(usuario)) {
+            historicos.put(usuario, new Historico());
+        }
+        historicoUsuario = historicos.get(usuario);
+        historicoUsuario.agregarCompra(criptomoneda.getSimbolo(), cantidadAComprar);
+        System.out.println("Compra finalizada con exito. Volviendo al menu principal.");
+
+    }
+
+
+    private void sistemaAdmin() {
+        System.out.println("Bienvenido al sistema de criptodivisas. Usted está identificado como administrador.");
         mostrarMenuAdministrador();
         String opcion = ingresoDeOpcionNumerica();
         while(!opcion.equals("6")){
@@ -56,27 +239,43 @@ public class Programa {
                     break;
                 case "4":
                     System.out.println("Usted selecciono consultar criptomoneda.");
-                    System.out.println("Ingrese el nombre de la moneda que quiere consultar:");
-                    String criptoAConsultar = ingresoDeTexto();
-                    Criptomoneda criptomoneda = buscarCriptomoneda(criptoAConsultar);
-                    while(criptomoneda == null) {
-                        System.out.printf("La criptomoneda %s no existe. Ingrese el nombre nuevamente: %n", criptoAConsultar);
-                        criptoAConsultar = ingresoDeTexto();
-                        criptomoneda = buscarCriptomoneda(criptoAConsultar);
-                    }
-                    Mercado mercado = buscarMercado(criptomoneda.getSimbolo());
-                    System.out.println(criptomoneda);
-                    System.out.println("Datos del mercado:");
-                    System.out.println(mercado.toString());
-                    // TODO: Estaria bueno agregar opcion para preguntar si quiere consultar alguna otra
+                    menuConsultaCriptomonedas();
+                    break;
+                // TODO: Estaria bueno agregar opcion para preguntar si quiere consultar alguna otra
                 case "5":
                     System.out.println("Usted selecciono consultar el estado actual del mercado.");
                     mostrarMercado();
+                    break;
+                // TODO: Default?
             }
             mostrarMenuAdministrador();
             opcion = ingresoDeOpcionNumerica();
         }
     }
+
+    private void menuConsultaCriptomonedas() {
+        listarCriptomonedas();
+        System.out.println("Ingrese el nombre de la moneda que quiere consultar:");
+        String criptoAConsultar = ingresoDeTexto();
+        Criptomoneda criptomoneda = buscarCriptomonedaPorNombre(criptoAConsultar);
+        while(criptomoneda == null) {
+            System.out.printf("La criptomoneda %s no existe. Ingrese el nombre nuevamente: %n", criptoAConsultar);
+            criptoAConsultar = ingresoDeTexto();
+            criptomoneda = buscarCriptomonedaPorNombre(criptoAConsultar);
+        }
+        Mercado mercado = buscarMercado(criptomoneda.getSimbolo());
+        System.out.println(criptomoneda);
+        System.out.println("Datos del mercado:");
+        System.out.println(mercado.toString());
+    }
+
+    private void listarCriptomonedas() {
+        System.out.println("Lista de criptomonedas disponibles: ");
+        for(Criptomoneda criptomoneda: criptomonedas){
+            System.out.println(criptomoneda.getNombre());
+        }
+    }
+
 
     private void mostrarMercado() {
         System.out.println();
@@ -93,10 +292,29 @@ public class Programa {
         }
     }
 
+    private List<String> mostrarCriptomonedasPoseidasPorUsuario(Usuario usuario) {
+        Historico historicoUsuario = this.historicos.get(usuario);
+        Map<String, Double> historialDeCompras = historicoUsuario.getHistorialDeCompras();
+        if (historialDeCompras.isEmpty()){
+            System.out.println("El usuario no posee Criptomonedas compradas.");
+            return Collections.emptyList();
+        } else {
+            List<String> listaDeCriptosDisponibles = new ArrayList<>();
+            System.out.println("Usted posee:");
+            for (Map.Entry<String, Double> entry : historialDeCompras.entrySet()) {
+                String cripto = entry.getKey();
+                Double valor = entry.getValue();
+                System.out.printf("Criptomoneda: %s, Cantidad: %f%n", cripto, valor);
+                listaDeCriptosDisponibles.add(cripto);
+            }
+            return listaDeCriptosDisponibles;
+        }
+    }
+
     private void crearCriptomoneda() {
         System.out.println("Ingrese el nombre de la moneda a crear (solo letras y numeros): ");
         String nombre = ingresoDeTexto();
-        Criptomoneda criptomonedaTemp = buscarCriptomoneda(nombre);
+        Criptomoneda criptomonedaTemp = buscarCriptomonedaPorNombre(nombre);
         if (criptomonedaTemp != null) {
             System.out.println("La criptomoneda ya existe, desea modificarla?");
             System.out.println("1) Si.");
@@ -134,12 +352,12 @@ public class Programa {
     }
 
     private void modificarCriptomoneda(String nombre) {
-        Criptomoneda criptomoneda = buscarCriptomoneda(nombre);
+        Criptomoneda criptomoneda = buscarCriptomonedaPorNombre(nombre);
 
         while (criptomoneda == null) {
             System.out.println("La criptomoneda que ingreso no existe, ingrese una criptomoneda que ya exista: ");
             nombre = ingresoDeTexto();
-            criptomoneda = buscarCriptomoneda(nombre);
+            criptomoneda = buscarCriptomonedaPorNombre(nombre);
         }
         String simboloViejo = criptomoneda.getSimbolo();
 
@@ -206,9 +424,18 @@ public class Programa {
         return null;
     }
 
-    private Criptomoneda buscarCriptomoneda(String nombre) {
+    private Criptomoneda buscarCriptomonedaPorNombre(String nombre) {
         for (Criptomoneda criptomoneda : this.criptomonedas) {
             if (criptomoneda.getNombre().equals(nombre)) {
+                return criptomoneda;
+            }
+        }
+        return null;
+    }
+
+    private Criptomoneda buscarCriptomonedaPorSimbolo(String simbolo) {
+        for (Criptomoneda criptomoneda : this.criptomonedas) {
+            if (criptomoneda.getSimbolo().equals(simbolo)) {
                 return criptomoneda;
             }
         }
