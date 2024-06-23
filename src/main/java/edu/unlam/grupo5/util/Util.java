@@ -8,7 +8,7 @@ public class Util {
 
     public static String ingresoDeTexto() {
         String s = scanner.nextLine();
-        boolean validez = s.matches("^[a-zA-Z0-9.]+$"); // Permitir espacios?
+        boolean validez = s.matches("^[a-zA-Z0-9. ]+$"); // Permitir espacios?
         if (validez){
             return s;
         } else {

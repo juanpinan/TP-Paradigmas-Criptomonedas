@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Scanner;
 
 import static edu.unlam.grupo5.util.Util.ingresoDeOpcionNumerica;
 import static edu.unlam.grupo5.util.Util.ingresoDeTexto;
@@ -23,10 +22,10 @@ import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarCriptomonedas;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarHistoricos;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarMercados;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarUsuarios;
+import static java.lang.Double.parseDouble;
 
 public class Programa {
 
-    // TODO: Cambiar criptomonedas a Set
     private final List<Criptomoneda> criptomonedas;
     private final List<Mercado> mercados;
     private final List<Usuario> usuarios;
@@ -456,17 +455,40 @@ public class Programa {
     }
     
     public Usuario login() {
-    	Scanner scanner = new Scanner(System.in);
     	System.out.println("-------------------Inicio de Sesion sistema Criptodivisas-------------------\n");
     	System.out.println("Por favor, ingrese su nombre de usuario: ");
-    	String username = scanner.nextLine();
+    	String username = ingresoDeTexto();
 
         Usuario uTemp = buscarUsuario(username);
     	while(uTemp == null) {
-    		System.out.println("Ese usuario no se encuentra ingresado. Vuelva a ingresar un usuario valido:");// TODO: Cambiar a que si no existe crearlo (creo que era consigna del tp)
-    		username = scanner.nextLine();
+            String opcion;
+    		System.out.println("Ese usuario no se encuentra ingresado. Quiere crear un usuario?");
+            System.out.println("1) Si.");
+            System.out.println("2) No.");
+            opcion = ingresoDeOpcionNumerica();
+            while(!opcion.equals("2")) {
+                if (opcion.equals("1")) {
+                    System.out.println("Ingrese su nombre de usuario: ");
+                    String nombre = ingresoDeTexto();
+                    System.out.println("Ingrese su numero de cuenta bancaria: ");
+                    String cuenta = ingresoDeTexto();
+                    System.out.println("Ingrese su nombre de banco: ");
+                    String banco = ingresoDeTexto();
+                    System.out.println("Ingrese su saldo: ");
+                    Double saldo = parseDouble(ingresoDeTexto());
+                    Usuario nuevoUsuario = new Usuario(nombre, cuenta, banco, saldo);
+                    usuarios.add(nuevoUsuario);
+                    return nuevoUsuario;
+                } else {
+                    System.out.println("Opcion no valida. Ingrese de nuevo una opcion: ");
+                    opcion = ingresoDeOpcionNumerica();
+                }
+            }
+            System.out.println("Por favor, ingrese su nombre de usuario: ");
+    		username = ingresoDeTexto();
     		uTemp = buscarUsuario(username);
-    	} //si paso este while, tengo el usuario.
+    	}
+
     	return uTemp;
     	
     }
