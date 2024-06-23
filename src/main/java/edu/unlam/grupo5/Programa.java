@@ -1,22 +1,26 @@
 package edu.unlam.grupo5;
 
+import com.opencsv.CSVWriter;
 import edu.unlam.grupo5.model.Criptomoneda;
 import edu.unlam.grupo5.model.Historico;
 import edu.unlam.grupo5.model.Mercado;
 import edu.unlam.grupo5.model.Usuario;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
-import static edu.unlam.grupo5.Util.ingresoDeOpcionNumerica;
-import static edu.unlam.grupo5.Util.ingresoDeTexto;
-import static edu.unlam.grupo5.Util.mostrarMenuAdministrador;
-import static edu.unlam.grupo5.Util.mostrarMenuTrader;
+import static edu.unlam.grupo5.util.Util.ingresoDeOpcionNumerica;
+import static edu.unlam.grupo5.util.Util.ingresoDeTexto;
+import static edu.unlam.grupo5.util.Util.mostrarMenuAdministrador;
+import static edu.unlam.grupo5.util.Util.mostrarMenuTrader;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarCriptomonedas;
+import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarHistoricos;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarMercados;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarUsuarios;
 
@@ -32,16 +36,17 @@ public class Programa {
         this.criptomonedas = cargarCriptomonedas();
         this.mercados = cargarMercados();
         this.usuarios = cargarUsuarios();
-        this.historicos = new HashMap<>(); // TODO Hacer la carga del historico si ya existe
+        this.historicos = cargarHistoricos(usuarios);
     }
 
     public void iniciar() {
-        Usuario usuario = login(); // TODO Se podria armar dos clases SistemaAdministrador y SistemaTrader y se ejecuta uno de los dos dependiendo de este metodo
+        Usuario usuario = login();
         if (usuario.getRolONumeroDeCuenta().equals("administrador")){
             this.sistemaAdmin();
         } else {
             this.sistemaTrader(usuario);
         }
+        guardarTodoYSalir();
     }
 
     private void sistemaTrader(Usuario usuario) {
@@ -80,16 +85,60 @@ public class Programa {
         }
     }
 
+    private void guardarTodoYSalir() {
+        String basePath = "src/main/resources/";
+        try(FileWriter outputfile = new FileWriter(basePath + "criptomonedas.csv")) {
+            CSVWriter writer = new CSVWriter(outputfile);
+            for (Criptomoneda c : criptomonedas) {
+                String [] data = {c.getNombre(), c.getSimbolo(), String.format(Locale.US,"%.2f", c.getPrecioUSD())};
+                writer.writeNext(data);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try(FileWriter outputfile = new FileWriter(basePath + "mercados.csv")) {
+            CSVWriter writer = new CSVWriter(outputfile);
+            for (Mercado m : mercados) {
+                String [] data = {m.getSimbolo(), String.format(Locale.US,"%.2f",m.getCapacidad()), m.getVolumen24hs(), m.getVariacionUltimos7dias()};
+                writer.writeNext(data);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try(FileWriter outputfile = new FileWriter(basePath + "usuarios.csv")) {
+            CSVWriter writer = new CSVWriter(outputfile);
+            for (Usuario u : usuarios) {
+                String [] data = {u.getNombreDeUsuario(), u.getRolONumeroDeCuenta(), u.getBanco(), String.format(Locale.US,"%.2f", u.getSaldo())};
+                writer.writeNext(data);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        for (Map.Entry<Usuario, Historico> entrada : historicos.entrySet()) {
+            try(FileWriter outputfile = new FileWriter(basePath + entrada.getKey().getNombreDeUsuario() + "_historico.csv")) {
+                CSVWriter writer = new CSVWriter(outputfile);
+                for (Map.Entry<String, Integer> h : entrada.getValue().getHistorialDeCompras().entrySet()) {
+                    String [] data = {h.getKey(), String.format("%d",h.getValue())};
+                    writer.writeNext(data);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     private void mostrarHistoricoDelUsuario(Usuario usuario) {
         Historico historico = historicos.get(usuario);
         if (historico == null) {
             System.out.println("Este usuario no posee un historico de transacciones.");
         } else {
-            for (Map.Entry<String, Double> entry : historico.getHistorialDeCompras().entrySet()) {
+            for (Map.Entry<String, Integer> entry : historico.getHistorialDeCompras().entrySet()) {
                 String cripto = entry.getKey();
-                Double valor = entry.getValue();
+                Integer valor = entry.getValue();
                 //TODO: Falta en orden descendente de cantidad.
-                System.out.printf("Criptomoneda: %s, Cantidad: %f%n", cripto, valor);
+                System.out.printf("Criptomoneda: %s, Cantidad: %d%n", cripto, valor);
             }
         }
     }
@@ -122,7 +171,7 @@ public class Programa {
             criptomoneda = buscarCriptomonedaPorSimbolo(ingresoDeTexto());
         }
         System.out.println("Elija la cantidad a vender");
-        double cantAVender = Double.parseDouble(ingresoDeTexto());
+        int cantAVender = Integer.parseInt(ingresoDeTexto());
         if(cantAVender > historicos.get(usuario).getCantidadPorSimbolo(criptomoneda.getSimbolo())){
             System.out.println("La cantidad que usted quiere comprar supera la que usted posee. Volviendo al menu principal.");
             return;
@@ -147,7 +196,7 @@ public class Programa {
 
     }
 
-    private void ejecutarVenta(Usuario usuario, Criptomoneda criptomoneda, double cantAVender) {
+    private void ejecutarVenta(Usuario usuario, Criptomoneda criptomoneda, int cantAVender) {
         Mercado mercado = buscarMercado(criptomoneda.getSimbolo());
         mercado.ejecutarVenta(cantAVender);
         Historico historico = historicos.get(usuario);
@@ -168,9 +217,9 @@ public class Programa {
             criptomoneda = buscarCriptomonedaPorSimbolo(ingresoDeTexto());
         }
         System.out.println("Elija la cantidad a comprar: ");
-        Double cantidadAComprar = Double.parseDouble(ingresoDeTexto());
+        Integer cantidadAComprar = Integer.parseInt(ingresoDeTexto());
         double precioOrden = cantidadAComprar * criptomoneda.getPrecioUSD();
-        System.out.printf("Usted eligio comprar %s con una cantidad de %.2f. Esto equivale a U$D %.2f. Quiere confirmar la operacion?%n",
+        System.out.printf("Usted eligio comprar %s con una cantidad de %d. Esto equivale a U$D %.2f. Quiere confirmar la operacion?%n",
                 criptomoneda.getSimbolo(),
                 cantidadAComprar,
                 precioOrden);
@@ -192,10 +241,14 @@ public class Programa {
         }
     }
 
-    private void ejecutarCompra(Usuario usuario, Criptomoneda criptomoneda, Double cantidadAComprar) {
+    private void ejecutarCompra(Usuario usuario, Criptomoneda criptomoneda, Integer cantidadAComprar) {
         Mercado mercado = buscarMercado(criptomoneda.getSimbolo());
         double precioFinal = criptomoneda.getPrecioUSD() * cantidadAComprar;
-        mercado.ejecutarCompra(criptomoneda, cantidadAComprar);
+        mercado.ejecutarCompra(cantidadAComprar);
+
+        if (cantidadAComprar > 1000){
+            criptomoneda.actualizarPrecioPorCompraGrande();
+        }
         usuario.actualizarSaldoPorCompra(precioFinal);
 
         Historico historicoUsuario;
@@ -227,8 +280,11 @@ public class Programa {
                     break;
                 case "3":
                     System.out.println("Usted selecciono eliminar criptomoneda.");
+                    if(criptomonedas.isEmpty()){
+                        System.out.println("No hay criptomonedas en el sistema.");
+                        break;
+                    }
                     mostrarCriptomonedas();
-                    // TODO: Hacer un check por si no hay criptomonedas en el sistema.
                     System.out.println("Ingrese el nombre de la moneda que quiere eliminar: ");
                     String criptoAEliminar = ingresoDeTexto();
                     while(!eliminarCriptomoneda(criptoAEliminar)) {
@@ -240,12 +296,10 @@ public class Programa {
                     System.out.println("Usted selecciono consultar criptomoneda.");
                     menuConsultaCriptomonedas();
                     break;
-                // TODO: Estaria bueno agregar opcion para preguntar si quiere consultar alguna otra
                 case "5":
                     System.out.println("Usted selecciono consultar el estado actual del mercado.");
                     mostrarMercado();
                     break;
-                // TODO: Default?
             }
             mostrarMenuAdministrador();
             opcion = ingresoDeOpcionNumerica();
@@ -293,17 +347,17 @@ public class Programa {
 
     private List<String> mostrarCriptomonedasPoseidasPorUsuario(Usuario usuario) {
         Historico historicoUsuario = this.historicos.get(usuario);
-        Map<String, Double> historialDeCompras = historicoUsuario.getHistorialDeCompras();
+        Map<String, Integer> historialDeCompras = historicoUsuario.getHistorialDeCompras();
         if (historialDeCompras.isEmpty()){
             System.out.println("El usuario no posee Criptomonedas compradas.");
             return Collections.emptyList();
         } else {
             List<String> listaDeCriptosDisponibles = new ArrayList<>();
             System.out.println("Usted posee:");
-            for (Map.Entry<String, Double> entry : historialDeCompras.entrySet()) {
+            for (Map.Entry<String, Integer> entry : historialDeCompras.entrySet()) {
                 String cripto = entry.getKey();
-                Double valor = entry.getValue();
-                System.out.printf("Criptomoneda: %s, Cantidad: %f%n", cripto, valor);
+                Integer valor = entry.getValue();
+                System.out.printf("Criptomoneda: %s, Cantidad: %d%n", cripto, valor);
                 listaDeCriptosDisponibles.add(cripto);
             }
             return listaDeCriptosDisponibles;
@@ -338,16 +392,19 @@ public class Programa {
         System.out.println("Es correcto?");
         System.out.println("1) Si.");
         System.out.println("2) No.");
-        // TODO: Poner un check de que las opciones sean validas
         String opcion = ingresoDeOpcionNumerica();
-        if (opcion.equals("1")) {
-            Criptomoneda criptomoneda = new Criptomoneda(nombre, simbolo, precio);
-            this.criptomonedas.add(criptomoneda);
-            agregarMercado(criptomoneda);
-            System.out.println("Criptomoneda creada con exito.");
-        } else {
-            crearCriptomoneda();
+        while(!opcion.equals("2")) {
+            if (opcion.equals("1")) {
+                Criptomoneda criptomoneda = new Criptomoneda(nombre, simbolo, precio);
+                this.criptomonedas.add(criptomoneda);
+                agregarMercado(criptomoneda);
+                System.out.println("Criptomoneda creada con exito.");
+            } else {
+                System.out.println("Opcion no valida. Ingrese de nuevo una opcion: ");
+                opcion = ingresoDeOpcionNumerica();
+            }
         }
+
     }
 
     private void modificarCriptomoneda(String nombre) {

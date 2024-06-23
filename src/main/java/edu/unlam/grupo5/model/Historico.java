@@ -5,28 +5,32 @@ import java.util.Map;
 
 public class Historico {
 
-    private final Map<String, Double> historialDeCompras;
+    private final Map<String, Integer> historialDeCompras;
 
     public Historico() {
         historialDeCompras = new HashMap<>();
     }
 
-    public void agregarCompra(String simbolo, double cantidad) {
+    public Historico(Map<String, Integer> historialDeCompras) {
+        this.historialDeCompras = historialDeCompras;
+    }
+
+    public void agregarCompra(String simbolo, int cantidad) {
         if(!historialDeCompras.containsKey(simbolo)) {
             historialDeCompras.put(simbolo, cantidad);
         } else {
-            Double cantidadActualizadaDelHistorico = historialDeCompras.get(simbolo);
+            Integer cantidadActualizadaDelHistorico = historialDeCompras.get(simbolo);
             cantidadActualizadaDelHistorico += cantidad;
             // Capaz el replace no haga falta porque Double es un objeto y ya estariamos actualizando la referencia
             historialDeCompras.replace(simbolo, cantidadActualizadaDelHistorico);
         }
     }
 
-    public void agregarVenta(String simbolo, double cantidad) {
+    public void agregarVenta(String simbolo, int cantidad) {
         if(!historialDeCompras.containsKey(simbolo)) {
             throw new RuntimeException("La criptomoneda no existe.");
         } else {
-            Double cantidadActualizadaDelHistorico = historialDeCompras.get(simbolo);
+            Integer cantidadActualizadaDelHistorico = historialDeCompras.get(simbolo);
             cantidadActualizadaDelHistorico -= cantidad;
             if(cantidadActualizadaDelHistorico == 0) {
                 historialDeCompras.remove(simbolo);
@@ -37,11 +41,11 @@ public class Historico {
         }
     }
 
-    public Double getCantidadPorSimbolo(String simbolo) {
+    public Integer getCantidadPorSimbolo(String simbolo) {
         return historialDeCompras.get(simbolo);
     }
 
-    public Map<String, Double> getHistorialDeCompras() {
+    public Map<String, Integer> getHistorialDeCompras() {
         return historialDeCompras;
     }
 

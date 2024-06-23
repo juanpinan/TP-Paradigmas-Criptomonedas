@@ -1,4 +1,4 @@
-package edu.unlam.grupo5;
+package edu.unlam.grupo5.util;
 
 import java.util.Scanner;
 

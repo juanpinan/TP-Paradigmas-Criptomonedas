@@ -5,7 +5,6 @@ public class Usuario {
     private final String nombreDeUsuario;
     private final String rolONumeroDeCuenta;
     private final String banco;
-
     private Double saldo;
 
     public Usuario(String nombreDeUsuario, String rolONumeroDeCuenta, String banco, Double saldo) {

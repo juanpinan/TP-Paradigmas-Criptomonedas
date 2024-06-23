@@ -1,5 +1,7 @@
 package edu.unlam.grupo5.model;
 
+import java.util.Locale;
+
 public class Mercado {
 
     private String simbolo;
@@ -14,27 +16,23 @@ public class Mercado {
         this.variacionUltimos7dias = variacionUltimos7dias;
     }
 
-    public void ejecutarCompra(Criptomoneda criptomoneda, Double cantidad) {
+    public void ejecutarCompra(Integer cantidad) {
         actualizarCapacidadPorCompra(cantidad);
         actualizarVolumen(1.05);
-        actualizarVariacion(1.05);
-        // TODO: Mover esto fuera de esta clase
-        if (cantidad > 1000){
-            criptomoneda.actualizarPrecioPorCompraGrande();
-        }
+        actualizarVariacion(+5);
     }
 
-    public void ejecutarVenta(Double cantidad) {
+    public void ejecutarVenta(Integer cantidad) {
         actualizarCapacidadPorVenta(cantidad);
-        actualizarVolumen(0.97);
-        actualizarVariacion(0.97);
+        actualizarVolumen(0.93);
+        actualizarVariacion(-7);
     }
 
-    private void actualizarCapacidadPorVenta(Double cantidad) {
+    private void actualizarCapacidadPorVenta(Integer cantidad) {
         this.capacidad += cantidad;
     }
 
-    private void actualizarCapacidadPorCompra(Double cantidad) {
+    private void actualizarCapacidadPorCompra(Integer cantidad) {
         if(cantidad > this.capacidad) {
             throw new RuntimeException("La compra excede la capacidad disponible de la moneda.");
         }
@@ -43,17 +41,15 @@ public class Mercado {
 
     private void actualizarVolumen(double porcentaje) {
         double volumen = Double.parseDouble(this.volumen24hs.substring(0, this.volumen24hs.length()-1));
-        this.volumen24hs = String.valueOf(volumen * porcentaje).substring(0,5) + "%";
+        this.volumen24hs = String.format(Locale.US,"%.2f%%",volumen * porcentaje);
     }
 
     private void actualizarVariacion(double porcentaje) {
         double variacion = Double.parseDouble(this.variacionUltimos7dias.substring(1, this.variacionUltimos7dias.length()-1));
-        double valorAntesDeGuardar = variacion * porcentaje;
-        String variacionActualizada =
-                valorAntesDeGuardar > 10 ?
-                        String.valueOf(valorAntesDeGuardar).substring(0,5) :
-                        String.valueOf(valorAntesDeGuardar).substring(0,4);
-        this.variacionUltimos7dias = "+" + variacionActualizada + "%";
+        double valorAntesDeGuardar = variacion + porcentaje;
+        String valorAntesDeGuardarString = String.format(Locale.US,"%.2f%%",valorAntesDeGuardar);
+        String signo = valorAntesDeGuardar < 0 ? "-" : "+";
+        this.variacionUltimos7dias = signo + valorAntesDeGuardarString;
     }
 
     public String getVolumen24hs() {
