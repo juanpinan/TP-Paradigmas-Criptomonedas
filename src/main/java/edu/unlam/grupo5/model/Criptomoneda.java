@@ -38,7 +38,7 @@ public class Criptomoneda {
 
     @Override
     public String toString() {
-        return String.format("Nombre: %s, Simbolo: %s, Precio en dolares: %f", this.nombre, this.simbolo, this.precioUSD);
+        return String.format("Nombre: %s, Simbolo: %s, Precio en dolares: %.2f", this.nombre, this.simbolo, this.precioUSD);
     }
 
     public void actualizarPrecioPorCompraGrande() {

@@ -74,7 +74,7 @@ public class Mercado {
 
     @Override
     public String toString() {
-        return String.format("Simbolo: %s, Capacidad: %f, Volumen Ultimas 24hs: %s, Variacion ultimos 7 dias: %s",
+        return String.format("Simbolo: %s, Capacidad: %.2f, Volumen Ultimas 24hs: %s, Variacion ultimos 7 dias: %s",
                 this.simbolo, this.capacidad, this.volumen24hs, this.variacionUltimos7dias);
     }
 }

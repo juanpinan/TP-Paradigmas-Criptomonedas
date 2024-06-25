@@ -1,6 +1,4 @@
-package edu.unlam.grupo5.ejecutable;
-
-import edu.unlam.grupo5.Programa;
+package edu.unlam.grupo5;
 
 public class App {
     public static void main(String[] args ) {

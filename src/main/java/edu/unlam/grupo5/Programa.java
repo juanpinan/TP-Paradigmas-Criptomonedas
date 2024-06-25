@@ -16,6 +16,8 @@ import java.util.Map;
 
 import static edu.unlam.grupo5.util.Util.ingresoDeOpcionNumerica;
 import static edu.unlam.grupo5.util.Util.ingresoDeTexto;
+import static edu.unlam.grupo5.util.Util.ingresoSoloDeNumeros;
+import static edu.unlam.grupo5.util.Util.ingresoSoloDeNumerosConDecimal;
 import static edu.unlam.grupo5.util.Util.mostrarMenuAdministrador;
 import static edu.unlam.grupo5.util.Util.mostrarMenuTrader;
 import static edu.unlam.grupo5.loader.CargadorDeDatos.cargarCriptomonedas;
@@ -170,7 +172,7 @@ public class Programa {
             criptomoneda = buscarCriptomonedaPorSimbolo(ingresoDeTexto());
         }
         System.out.println("Elija la cantidad a vender");
-        int cantAVender = Integer.parseInt(ingresoDeTexto());
+        int cantAVender = Integer.parseInt(ingresoSoloDeNumeros());
         if(cantAVender > historicos.get(usuario).getCantidadPorSimbolo(criptomoneda.getSimbolo())){
             System.out.println("La cantidad que usted quiere comprar supera la que usted posee. Volviendo al menu principal.");
             return;
@@ -216,7 +218,7 @@ public class Programa {
             criptomoneda = buscarCriptomonedaPorSimbolo(ingresoDeTexto());
         }
         System.out.println("Elija la cantidad a comprar: ");
-        Integer cantidadAComprar = Integer.parseInt(ingresoDeTexto());
+        Integer cantidadAComprar = Integer.parseInt(ingresoSoloDeNumeros());
         double precioOrden = cantidadAComprar * criptomoneda.getPrecioUSD();
         System.out.printf("Usted eligio comprar %s con una cantidad de %d. Esto equivale a U$D %.2f. Quiere confirmar la operacion?%n",
                 criptomoneda.getSimbolo(),
@@ -273,6 +275,7 @@ public class Programa {
                     break;
                 case "2":
                     System.out.println("Usted selecciono modificar criptomoneda.");
+                    mostrarCriptomonedas();
                     System.out.println("Ingrese la moneda que quiere modificar: ");
                     String criptoAModificar = ingresoDeTexto();
                     modificarCriptomoneda(criptoAModificar);
@@ -364,7 +367,7 @@ public class Programa {
     }
 
     private void crearCriptomoneda() {
-        System.out.println("Ingrese el nombre de la moneda a crear (solo letras y numeros): ");
+        System.out.println("Ingrese el nombre de la moneda a crear (solo letras): ");
         String nombre = ingresoDeTexto();
         Criptomoneda criptomonedaTemp = buscarCriptomonedaPorNombre(nombre);
         if (criptomonedaTemp != null) {
@@ -386,8 +389,8 @@ public class Programa {
         System.out.println("Ingrese el simbolo de la moneda: ");
         String simbolo = ingresoDeTexto();
         System.out.println("Ingrese el precio de la moneda en dolares estadounidenses: ");
-        Double precio = Double.valueOf(ingresoDeTexto());
-        System.out.printf("Usted ingreso: Nombre: %s, Simbolo: %s, Precio: USD %f%n", nombre, simbolo, precio);
+        Double precio = Double.valueOf(ingresoSoloDeNumerosConDecimal());
+        System.out.printf("Usted ingreso: Nombre: %s, Simbolo: %s, Precio: USD %.2f%n", nombre, simbolo, precio);
         System.out.println("Es correcto?");
         System.out.println("1) Si.");
         System.out.println("2) No.");
@@ -398,6 +401,7 @@ public class Programa {
                 this.criptomonedas.add(criptomoneda);
                 agregarMercado(criptomoneda);
                 System.out.println("Criptomoneda creada con exito.");
+                return;
             } else {
                 System.out.println("Opcion no valida. Ingrese de nuevo una opcion: ");
                 opcion = ingresoDeOpcionNumerica();
@@ -416,15 +420,15 @@ public class Programa {
         }
         String simboloViejo = criptomoneda.getSimbolo();
 
-        System.out.printf("Usted eligio la criptomoneda: %n Nombre: %s, Simbolo: %s, Precio: USD %f %n",
+        System.out.printf("Usted eligio la criptomoneda: %n Nombre: %s, Simbolo: %s, Precio: USD %.2f %n",
                 criptomoneda.getNombre(), criptomoneda.getSimbolo(), criptomoneda.getPrecioUSD());
         System.out.println("Ingrese el nuevo nombre: ");
         String nuevoNombre = ingresoDeTexto();
         System.out.println("Ingrese el nuevo simbolo: ");
         String nuevoSimbolo = ingresoDeTexto();
         System.out.println("Ingrese el nuevo precio en dolares estadounidenses: ");
-        Double nuevoPrecio = Double.valueOf(ingresoDeTexto());
-        System.out.printf("Usted ingreso: %n Nombre: %s, Simbolo: %s, Precio: USD %f %n",
+        Double nuevoPrecio = Double.valueOf(ingresoSoloDeNumerosConDecimal());
+        System.out.printf("Usted ingreso: %n Nombre: %s, Simbolo: %s, Precio: USD %.2f %n",
                 nuevoNombre, nuevoSimbolo, nuevoPrecio);
         System.out.println("Es correcto?");
         System.out.println("1) Si.");
@@ -471,11 +475,11 @@ public class Programa {
                     System.out.println("Ingrese su nombre de usuario: ");
                     String nombre = ingresoDeTexto();
                     System.out.println("Ingrese su numero de cuenta bancaria: ");
-                    String cuenta = ingresoDeTexto();
+                    String cuenta = ingresoSoloDeNumeros();
                     System.out.println("Ingrese su nombre de banco: ");
                     String banco = ingresoDeTexto();
                     System.out.println("Ingrese su saldo: ");
-                    Double saldo = parseDouble(ingresoDeTexto());
+                    Double saldo = parseDouble(ingresoSoloDeNumerosConDecimal());
                     Usuario nuevoUsuario = new Usuario(nombre, cuenta, banco, saldo);
                     usuarios.add(nuevoUsuario);
                     return nuevoUsuario;

@@ -8,14 +8,13 @@ public class Util {
 
     public static String ingresoDeTexto() {
         String s = scanner.nextLine();
-        boolean validez = s.matches("^[a-zA-Z0-9. ]+$"); // Permitir espacios?
+        boolean validez = s.matches("[a-zA-Z ]+");
         if (validez){
             return s;
         } else {
             System.out.println("El texto ingresado no es valido. Por favor ingreselo de nuevo: ");
-            ingresoDeTexto();
+            return ingresoDeTexto();
         }
-        return s;
     }
 
     public static String ingresoDeOpcionNumerica() {
@@ -25,9 +24,31 @@ public class Util {
             return s;
         } else {
             System.out.println("La opcion ingresada no es valida. Por favor ingrese de nuevo una opcion: ");
-            ingresoDeTexto();
+            return ingresoDeOpcionNumerica();
         }
-        return s;
+    }
+
+    public static String ingresoSoloDeNumeros(){
+        String s = scanner.nextLine();
+        boolean validez = s.matches("\\d+");
+        if (validez){
+            return s;
+        } else {
+            System.out.println("El numero ingresado no es valido. Por favor ingrese de nuevo: ");
+            return ingresoSoloDeNumeros();
+        }
+    }
+
+
+    public static String ingresoSoloDeNumerosConDecimal(){
+        String s = scanner.nextLine();
+        boolean validez = s.matches("\\d+(\\.\\d+)?");
+        if (validez){
+            return s;
+        } else {
+            System.out.println("El numero ingresado no es valido. Por favor ingrese de nuevo: ");
+            return ingresoSoloDeNumerosConDecimal();
+        }
     }
 
     public static void mostrarMenuAdministrador() {
