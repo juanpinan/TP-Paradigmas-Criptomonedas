@@ -93,7 +93,7 @@ public class CargadorDeDatos {
                     System.out.printf("Aviso: El usuario %s no tiene historico.%n", usuario.getNombreDeUsuario());
                 }
             } catch (CsvValidationException | IOException | URISyntaxException e) {
-                throw new RuntimeException(e);
+                throw new CargaDeDatosException(e.getMessage());
             }
         }
         return historicos;

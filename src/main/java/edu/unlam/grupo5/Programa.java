@@ -1,6 +1,7 @@
 package edu.unlam.grupo5;
 
 import com.opencsv.CSVWriter;
+import edu.unlam.grupo5.exception.GuardarDatosException;
 import edu.unlam.grupo5.model.Criptomoneda;
 import edu.unlam.grupo5.model.Historico;
 import edu.unlam.grupo5.model.Mercado;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static edu.unlam.grupo5.loader.GuardadorDeDatos.guardarTodoYSalir;
 import static edu.unlam.grupo5.util.Util.ingresoDeOpcionNumerica;
 import static edu.unlam.grupo5.util.Util.ingresoDeTexto;
 import static edu.unlam.grupo5.util.Util.ingresoSoloDeNumeros;
@@ -47,7 +49,7 @@ public class Programa {
         } else {
             this.sistemaTrader(usuario);
         }
-        guardarTodoYSalir();
+        guardarTodoYSalir(this.criptomonedas, this.mercados, this.usuarios, this.historicos);
     }
 
     private void sistemaTrader(Usuario usuario) {
@@ -86,50 +88,6 @@ public class Programa {
         }
     }
 
-    private void guardarTodoYSalir() {
-        String basePath = "src/main/resources/";
-        try(FileWriter outputfile = new FileWriter(basePath + "criptomonedas.csv")) {
-            CSVWriter writer = new CSVWriter(outputfile);
-            for (Criptomoneda c : criptomonedas) {
-                String [] data = {c.getNombre(), c.getSimbolo(), String.format(Locale.US,"%.2f", c.getPrecioUSD())};
-                writer.writeNext(data);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        try(FileWriter outputfile = new FileWriter(basePath + "mercados.csv")) {
-            CSVWriter writer = new CSVWriter(outputfile);
-            for (Mercado m : mercados) {
-                String [] data = {m.getSimbolo(), String.format(Locale.US,"%.2f",m.getCapacidad()), m.getVolumen24hs(), m.getVariacionUltimos7dias()};
-                writer.writeNext(data);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        try(FileWriter outputfile = new FileWriter(basePath + "usuarios.csv")) {
-            CSVWriter writer = new CSVWriter(outputfile);
-            for (Usuario u : usuarios) {
-                String [] data = {u.getNombreDeUsuario(), u.getRolONumeroDeCuenta(), u.getBanco(), String.format(Locale.US,"%.2f", u.getSaldo())};
-                writer.writeNext(data);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        for (Map.Entry<Usuario, Historico> entrada : historicos.entrySet()) {
-            try(FileWriter outputfile = new FileWriter(basePath + entrada.getKey().getNombreDeUsuario() + "_historico.csv")) {
-                CSVWriter writer = new CSVWriter(outputfile);
-                for (Map.Entry<String, Integer> h : entrada.getValue().getHistorialDeCompras().entrySet()) {
-                    String [] data = {h.getKey(), String.format("%d",h.getValue())};
-                    writer.writeNext(data);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     private void mostrarHistoricoDelUsuario(Usuario usuario) {
         Historico historico = historicos.get(usuario);
         if (historico == null) {
@@ -147,7 +105,7 @@ public class Programa {
     private void mostrarCriptomonedaRecomendada() {
         double mayor = 0;
         Criptomoneda criptomonedaARecomendar = null;
-        for (Criptomoneda criptomoneda : criptomonedas) {
+        for (Criptomoneda criptomoneda : this.criptomonedas) {
             double cantidadDisponible = buscarMercado(criptomoneda.getSimbolo()).getCapacidad();
             double precio = criptomoneda.getPrecioUSD();
             double estadistica = ( cantidadDisponible / precio ) * 100;
@@ -163,6 +121,7 @@ public class Programa {
     private void venderCriptomoneda(Usuario usuario) {
         List<String> listaDeCriptosDisponibles = mostrarCriptomonedasPoseidasPorUsuario(usuario);
         if(listaDeCriptosDisponibles.isEmpty()) {
+            System.out.println("El usuario no posee ninguna criptomoneda.");
             return;
         }
         System.out.println("Elija el simbolo de la criptomoneda que desea vender: ");
@@ -186,8 +145,6 @@ public class Programa {
         while(!opcion.equals("2")) {
             if (opcion.equals("1")) {
                 ejecutarVenta(usuario, criptomoneda, cantAVender);
-
-
                 return;
             } else {
                 System.out.println("Opcion no valida. Ingrese de nuevo una opcion: ");
@@ -206,8 +163,6 @@ public class Programa {
         usuario.actualizarSaldoPorVenta(dineroGanado);
         System.out.println("Operacion de venta exitosa. Volviendo al menu.");
     }
-
-
 
     private void comprarCriptomoneda(Usuario usuario) {
         mostrarCriptomonedas();
@@ -261,7 +216,6 @@ public class Programa {
         System.out.println("Compra finalizada con exito. Volviendo al menu principal.");
 
     }
-
 
     private void sistemaAdmin() {
         System.out.println("Bienvenido al sistema de criptodivisas. Usted está identificado como administrador.");
