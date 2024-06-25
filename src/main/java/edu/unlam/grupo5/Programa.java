@@ -121,7 +121,7 @@ public class Programa {
     private void venderCriptomoneda(Usuario usuario) {
         List<String> listaDeCriptosDisponibles = mostrarCriptomonedasPoseidasPorUsuario(usuario);
         if(listaDeCriptosDisponibles.isEmpty()) {
-            System.out.println("El usuario no posee ninguna criptomoneda.");
+            System.out.println("El usuario no posee ninguna criptomoneda para vender.");
             return;
         }
         System.out.println("Elija el simbolo de la criptomoneda que desea vender: ");
@@ -303,9 +303,13 @@ public class Programa {
 
     private List<String> mostrarCriptomonedasPoseidasPorUsuario(Usuario usuario) {
         Historico historicoUsuario = this.historicos.get(usuario);
+        if(historicoUsuario == null){
+            System.out.println("El usuario no posee Criptomonedas.");
+            return Collections.emptyList();
+        }
         Map<String, Integer> historialDeCompras = historicoUsuario.getHistorialDeCompras();
         if (historialDeCompras.isEmpty()){
-            System.out.println("El usuario no posee Criptomonedas compradas.");
+            System.out.println("El usuario no posee Criptomonedas.");
             return Collections.emptyList();
         } else {
             List<String> listaDeCriptosDisponibles = new ArrayList<>();

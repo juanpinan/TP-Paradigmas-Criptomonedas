@@ -19,7 +19,7 @@ public class Util {
 
     public static String ingresoDeOpcionNumerica() {
         String s = scanner.nextLine();
-        boolean validez = s.matches("[0-9]");
+        boolean validez = s.matches("[1-9]");
         if (validez){
             return s;
         } else {
@@ -30,7 +30,7 @@ public class Util {
 
     public static String ingresoSoloDeNumeros(){
         String s = scanner.nextLine();
-        boolean validez = s.matches("\\d+");
+        boolean validez = s.matches("[1-9]\\d*|0");
         if (validez){
             return s;
         } else {
@@ -42,7 +42,7 @@ public class Util {
 
     public static String ingresoSoloDeNumerosConDecimal(){
         String s = scanner.nextLine();
-        boolean validez = s.matches("\\d+(\\.\\d+)?");
+        boolean validez = s.matches("([1-9]\\d*(\\.\\d+)?|0\\.\\d+|0)");
         if (validez){
             return s;
         } else {
@@ -73,7 +73,7 @@ public class Util {
         System.out.println("4) Recomendar criptomoneda.");
         System.out.println("5) Consultar estado actual del mercado.");
         System.out.println("6) Visualizar archivo de transacciones historico.");
-        System.out.println("7) Salir.");
+        System.out.println("7) Salir y guardar.");
         System.out.println();
         System.out.println("Ingrese una opcion (1-7): ");
     }
